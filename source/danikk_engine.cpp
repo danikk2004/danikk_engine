@@ -3,20 +3,36 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <functional>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <danikk_framework/danikk_framework.h>
 #include <danikk_framework/path_buffer.h>
-#include <danikk_framework/trace_sigsegv.h>
+#include <danikk_framework/trace.h>
 #include <danikk_framework/argv.h>
+#include <danikk_framework/filesystem.h>
+#include <danikk_framework/log.h>
+#include <danikk_framework/datetime.h>
+#include <danikk_framework/array.h>
+#include <danikk_framework/thread.h>
+#include <danikk_framework/memory.h>
+
+#include <danikk_framework/misc/time_counter.h>
+#include <danikk_framework/misc/main.h>
 
 #include <danikk_engine/danikk_engine.h>
-#include <danikk_engine/data_manager.h>
 #include <danikk_engine/input.h>
 #include <danikk_engine/localization.h>
-#include <danikk_engine/sprite_renderer.h>
+#include <danikk_engine/internal/data_manager.h>
+#include <danikk_engine/internal/gl_object_manager.h>
+#include <danikk_engine/internal/error.h>
+#include <danikk_engine/font.h>
+#include <danikk_engine/sprite.h>
+#include <danikk_engine/gui.h>
+
+#include <GL/gl.h>
 
 using namespace danikk_framework;
 using namespace std::this_thread;
@@ -24,43 +40,127 @@ using namespace std::chrono;
 using std::thread;
 using std::mutex;
 
+namespace danikk_engine_game
+{
+	void begin();
+	void frame();
+	void pre_begin();
+}
+
 namespace danikk_engine
 {
 	using namespace internal;
 
-    GLFWwindow* window;
+	GLFWwindow* window;
 
-    mutex interruptionMutex;
-    bool graphics_is_inited = false;
+	vec2 cursor_pos;
+	vec2 cursor_delta;
 
-	bool gl_thing_execute_requied = false;
-	bool bool_begin_is_end = false;
-	std::function<void()> gl_thing;
+    TimeCounter fps_counter;
+    static float game_time = 0;
 
-    size_t gl_version_major = 4;
-    size_t gl_version_minor = 3;
+    static uint32 frame_count = 0;
+
+    thread_local bool is_main_thread = false;
+    bool gl_thing_execute_requied = false;
+    mutex gl_operation_mutex;
+    std::function<void()> gl_thing;
+
+    ivec2 window_size = uvec2(1440, 900);
+
+	float screen_ratio_gz;
+	float screen_ratio_lz;
+
+	struct button_state
+	{
+		uint32 change_frame;
+		uint32 state;
+
+		int getState()
+		{
+	    	if(state)
+	    	{
+	        	if(change_frame == frame_count)
+	        	{
+	        		return button_states::press;
+	        	}
+	        	else
+	        	{
+	        		return button_states::hold;
+	        	}
+	    	}
+	    	else
+	    	{
+	        	if(change_frame == frame_count)
+	        	{
+	        		return button_states::release;
+	        	}
+	        	else
+	        	{
+	        		return button_states::free;
+	        	}
+	    	}
+		}
+	};
+
+	button_state mouse_button_states[8]{ button_states::free };
+	button_state keyboard_button_states[400]{ button_states::free };
+
+	int getKeyboardState(int button)
+	{
+        return keyboard_button_states[button].getState();
+	}
+
+	int getMouseState(int button)
+	{
+    	return mouse_button_states[button].getState();
+	}
 
     static void cursorPositionCallback(GLFWwindow* window, double x, double y)
     {
-        (void)x;
-        (void)y;
-        (void)window;
+    	vec2 new_cursor_pos = vec2(
+			cursor_pos.x = x / window_size.x,
+			cursor_pos.y = 1 - y / window_size.y);//преобразование из системы координат ввода в систему координат OpenGL
+    	cursor_delta = new_cursor_pos - cursor_pos;
+    	cursor_pos = new_cursor_pos;
+    }
+
+    void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+    {
+    	button_state* currentMouseButton = &mouse_button_states[button];
+		currentMouseButton->change_frame = frame_count;
+    	if(action == GLFW_RELEASE)
+    	{
+    		currentMouseButton->state = false;
+    	}
+    	else if (action == GLFW_PRESS)
+    	{
+    		currentMouseButton->state = true;
+    	}
+    	if(button == mouse_buttons::left)
+    	{
+    		for(GUIElement* ch : gui_root.childs)
+    		{
+    			ch->handleClick(currentMouseButton->state);
+    		}
+    	}
     }
 
     static void errorCallback(int error, const char* description)
     {
         (void)error;
-        cout << description << endl;
+        log("GLFW  ", description);
     }
 
     static void glDebugMessageCallbackFunc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
     {
     	(void)source;
+    	(void)type;
     	(void)id;
     	(void)severity;
     	(void)length;
     	(void)userParam;
-        cout << "OpenGL Error type:" << type << " message: " << message << endl;
+    	log("GL    ", message);
     }
 
     static void framebufferSizeCallback(GLFWwindow* window, int width, int height)
@@ -71,11 +171,16 @@ namespace danikk_engine
 
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
-        (void)window;
-        (void)key;
-        (void)scancode;
-        (void)action;
-        (void)mods;
+    	button_state* currentMouseButton = &keyboard_button_states[key];
+		currentMouseButton->change_frame = frame_count;
+    	if(action == GLFW_RELEASE)
+    	{
+    		currentMouseButton->state = false;
+    	}
+    	else if (action == GLFW_PRESS)
+    	{
+    		currentMouseButton->state = true;
+    	}
     }
 
     static void charCallback(GLFWwindow* window, unsigned int codepoint)
@@ -92,10 +197,7 @@ namespace danikk_engine
 
     static void initGraphics()
     {
-        if (!glfwInit())
-        {
-            fatalError(localization("error/glfwinit"));
-        }
+    	assert(glfwInit());
 
         glfwSetErrorCallback(errorCallback);
 
@@ -103,13 +205,27 @@ namespace danikk_engine
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_version_minor);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+        glfwWindowHint(GLFW_DECORATED, false);
 
-        window = glfwCreateWindow(640, 480, "test", NULL, NULL);//glfwGetPrimaryMonitor()
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        window_size = ivec2(mode->width, mode->height);
+        window = glfwCreateWindow(window_size.x, window_size.y, "danikk engine game", NULL, NULL);
 
         if (!window)
         {
-            fatalError(localization("error/create_window"));
+        	fatalFail("initGraphics::create_window");
         }
+
+        //const GLFWvidmode* mode;
+        //mode = glfwGetVideoMode(NULL);
+        //window_size = uvec2(mode->width, mode->height);
+
+        glfwGetWindowSize(window, &window_size.x, &window_size.y);
+
+    	screen_ratio_gz = (float)window_size.x / (float)window_size.y;
+    	screen_ratio_lz = (float)window_size.y / (float)window_size.x;
 
         glfwMakeContextCurrent((GLFWwindow*)window);
         glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -117,13 +233,14 @@ namespace danikk_engine
         glfwSetWindowRefreshCallback(window, windowRefreshCallback);
         glfwSetCharCallback(window, charCallback);
         glfwSetCursorPosCallback(window, cursorPositionCallback);
+        glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            fatalError(localization("error/gladinit"));
+        	fatalFail("initGraphics::init_glad");
         }
 
-		#define display_gl_thing(name) cout << #name << ": " << glGetString(name) << endl;
+		#define display_gl_thing(name) formatLogInfo("% : %", #name , (char*)glGetString(name));
 			display_gl_thing(GL_VENDOR)
 			display_gl_thing(GL_VERSION)
 			display_gl_thing(GL_RENDERER)
@@ -132,11 +249,17 @@ namespace danikk_engine
 	    glDebugMessageCallback(glDebugMessageCallbackFunc, 0);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		//glEnable(GL_TEXTURE_2D);
+		//glEnable(GL_TEXTURE0);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        glClearColor(0.2f, 0.2f, 0.7f, 0);
+        //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glfwSwapBuffers(window);
-		graphics_is_inited = true;
+
+		initGlObjectManager();
+		initTextureRenderer();
+
+		gui_root.absolute_size = vec2(1.0f);
     }
 
     void exit()
@@ -144,102 +267,119 @@ namespace danikk_engine
         glfwSetWindowShouldClose(window, true);
     }
 
-    void fatalError(const char* message)
+    void setWindowTitle(const String& title)
     {
-		cerr << message << endl;
-		abort();
+    	glfwSetWindowTitle(window, title.c_string());
     }
 
-    void fatalError(const String& message)
+    float gameTime()
     {
-    	fatalError(message.c_string());
+    	return game_time;
     }
 
-    void _glexec(std::function<void()> func)
+    float timeFactor()
     {
-    	while(gl_thing_execute_requied)
+    	return game_time - (float)(int)(game_time);
+    }
+
+    uint64 frameCount()
+    {
+    	return frame_count;
+    }
+
+    vec2 getPixelSize()
+    {
+    	return vec2(1.0f / window_size.x, 1.0f / window_size.y);
+    }
+
+    vec2 getCursorPos()
+    {
+    	return cursor_pos;
+    }
+
+    namespace internal
+	{
+		void _glexec(std::function<void()> func)
 		{
-    		sleep_for(0.01ms);
+			if(is_main_thread)
+			{
+				func();
+			}
+			else
+			{
+				gl_operation_mutex.lock();
+				gl_thing = func;
+				gl_thing_execute_requied = true;
+				gl_operation_mutex.lock();
+				gl_operation_mutex.unlock();
+			}
 		}
-    	gl_thing = func;
-    	gl_thing_execute_requied = true;
-    	while(gl_thing_execute_requied)
-		{
-    		sleep_for(0.01ms);
-		}
+	}
+
+    static void baseInit()
+    {
+    	traceSegfault();
+
+    	log_config.log_to_dir = false;
+    	log_config.log_to_file = true;
+        configureLog();
+        argv::log();
+        formatLogInfo("BIT : %", sizeof(size_t) * 8);
+        enableAllocatorLog();
+        //formatLogMemory(" Array::summary memory size:%", Array::__getSummaryMemorySize());
+
+    	danikk_framework::setLocale("ru_RU");
+	    danikk_framework::initLocalization();
+    	danikk_engine::initLocaliztion();
+
+    	cwdToExd();
+        formatLogInfo("CWD : %", getExecutableDirectory().c_string());
+        is_main_thread = true;
     }
 
-    static void graphicsThreadMain()
+    static void mainLoop()
     {
-        initGraphics();
-        initTextureRenderer();
-
-        while(!bool_begin_is_end)
-        {
-            if(gl_thing_execute_requied)
-            {
-            	gl_thing();
-
-            	gl_thing_execute_requied = false;
-            }
-            sleep_for(0.01ms);
-        }
-
         while (!glfwWindowShouldClose(window))
         {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            draw();
-            glfwSwapBuffers(window);
             glfwPollEvents();
+        	glUniform1f(shader_layout_locations::time_factor, game_time);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            danikk_engine_game::frame();
+
+    		for(GUIElement* ch : gui_root.childs)
+    		{
+    			ch->recursiveDraw();
+    		}
+            glfwSwapBuffers(window);
+            fps_counter.check();
+            glUniform1f(shader_layout_locations::time_factor, sin(game_time));
             if(gl_thing_execute_requied)
             {
             	gl_thing();
-
             	gl_thing_execute_requied = false;
+    			gl_operation_mutex.unlock();
             }
+            game_time += target_fd;
+            frame_count++;
         }
     }
 }
 
 using namespace danikk_engine;
+using namespace danikk_engine_game;
 
-int main(int argc, char** argv)
+DECLARE_MAIN
 {
-	trace_sigsegv();
-
-	#if IS_RELEASE
-	    freopen("log.txt", "w", stdout);
-	    freopen("error_log.txt", "w", stderr);
-	#endif
-
-    argv::init(argc, argv);
-
-    cout << "DIR: " << getExecutableDirectory() << endl;
-
-    initDataManager();
-
-    thread graphicsThread(graphicsThreadMain);
-
-    while(!graphics_is_inited)
-	{
-    	sleep_for(0.1ms);
-	}
-    begin();
-
-    bool_begin_is_end = true;
-
-    while (!glfwWindowShouldClose(window))
-    {
-        if (keyPressed(GLFW_KEY_LEFT_ALT) & keyPressed(GLFW_KEY_F4))
-        {
-            return EXIT_SUCCESS;
-        }
-
-        update();
-    }
-
-    graphicsThread.join();
-    //glfwDestroyWindow(window);
+	baseInit();
+	pre_begin();
+	initAssetTypes();
+	initDataManager();
+	initShaderCompiler();
+	initFontRenderer();
+	initGraphics();
+	begin();
+	mainLoop();
+    glfwDestroyWindow(window);
     //glfwTerminate();
-    return EXIT_SUCCESS;
+    return 0;
 }

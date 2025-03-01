@@ -1,59 +1,84 @@
 #pragma once
 
 #include <danikk_engine/danikk_engine.h>
-#include <danikk_engine/internal/texture_data.h>
-#include <danikk_engine/internal/shader_data.h>
 
 namespace danikk_engine
 {
 	namespace internal
 	{
+		struct TextureData
+		{
+			uint handle;
+			uint16 width;
+			uint16 height;
+		};
+
+		struct ShaderData
+		{
+			uint handle;
+		};
+
+		struct FontData;//Имплементация в <internal/font.h>
+
+		struct ModelData;//Имплементация в <internal/model.h>
+
 		struct AssetContainer;
-
-		class Asset
-		{
-		protected:
-			friend class AssetContainer;
-			AssetContainer& container;
-
-			Asset();
-
-			Asset(AssetContainer& container);
-
-			Asset(AssetContainer&& container);
-
-			Asset& operator=(Asset& other);
-
-			Asset& operator=(Asset&& other);
-
-			~Asset();
-		};
-
-		enum
-		{
-			texture_enum,
-			shader_enum,
-			model_enum,
-		};
 
 		typedef void (*asset_free_func_t)(AssetContainer&);
 
-		extern asset_free_func_t asset_free_funcs[];//Определение в data_manager.cpp
+		struct AssetType
+		{
+			const char* name;
+			asset_free_func_t free_func;
+		};
 
-		extern const char* asset_type_strings[];
+		struct asset_type
+		{
+			static constexpr size_t texture = 0;
+			static constexpr size_t shader = 1;
+			static constexpr size_t font = 2;
+			static constexpr size_t model = 3;
+		};
+
+		extern AssetType asset_types[4];
+
+		void initAssetTypes();
 
 		struct AssetContainer
 		{
-			uint32 type;
-			uint32 ref_count;
+			AssetType* type;
+			size_t ref_count;
+			String name;
 
 			union
 			{
 				TextureData texture_data;
 				ShaderData shader_data;
+				FontData* font_ptr;
+				ModelData* model_ptr;
 			};
 
-			friend ostream& operator<<(ostream& cout, AssetContainer& container);
+			AssetContainer(size_t type, const String& name);
+
+			friend std::ostream& operator<<(std::ostream& cout, AssetContainer& container);
+		};
+
+		struct Asset
+		{
+			friend class AssetContainer;
+			AssetContainer* container;
+
+			Asset();
+
+			Asset(AssetContainer* container);
+
+			Asset& operator=(Asset& other);
+
+			Asset& operator=(Asset&& other);
+
+			bool isNull();
+
+			~Asset();
 		};
 	}
 }

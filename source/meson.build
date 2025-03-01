@@ -1,13 +1,24 @@
 danikk_engine_source = files(
+    'asset.cpp',
     'danikk_engine.cpp',
     'data_manager.cpp',
+    'error.cpp',
+    'features.cpp',
+    'font.cpp',
+    'gl_object_manager.cpp',
     'glad.cpp',
-    'input.cpp',
+    'gui_subwindow.cpp',
+    'gui.cpp',
+    'key_bind.cpp',
     'localization.cpp',
+    'dynamic_mesh.cpp',
+    'mesh.cpp',
     'model.cpp',
     'shader.cpp',
-    'sprite_renderer.cpp',
+    'sprite.cpp',
+    'style.cpp',
+    'texture_methods.cpp',
     'texture.cpp',
+    'matrix.cpp',
+    'stb.cpp'
 )
-
-subdir('internal')

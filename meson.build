@@ -22,7 +22,7 @@ cpp_args = [
 lib = static_library(
     'danikk_engine', 
     danikk_engine_source,
-    include_directories : include + include_directories('include_internal'),
+    include_directories : include + include_directories('include_lib'),
     link_args : ['-rdynamic'],
     cpp_args : cpp_args
 )
@@ -37,6 +37,8 @@ deps = [
     dependency('glfw3'),
     dependency('libzip'),
     dependency('assimp'),
-    dependency('dl'),
+    dependency('freetype2'),
+    dependency('threads'),
+    #dependency('dl'),
     this_dep
 ]

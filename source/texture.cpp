@@ -1,82 +1,181 @@
 #include <glad/glad.h>
+#include <glm/gtc/matrix_transform.hpp>
 
+#include <danikk_engine/sprite.h>
 #include <danikk_engine/texture.h>
-#include <danikk_engine/internal/gl_memory_manager.h>
+
+#include <danikk_engine/internal/stb.h>
+#include <danikk_engine/internal/data_manager.h>
+#include <danikk_engine/internal/gl_object_manager.h>
+#include <danikk_engine/internal/vertex_attrib.h>
+#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/internal/glexec.h>
+#include <danikk_engine/matrix/uv.h>
 
 namespace danikk_engine
 {
-	static uint SREBO;
-	static uint SRVBO;
-	static uint SRVAO;
-
-	const float vertices[] = {
-		 //Позиции     		//Нормаль			//Текстурные координаты
-		 1.0f,  1.0f, 0.0f,	1.0f,   1.0f, 0.0f,	1.0f, 1.0f,	//Верхний правый
-		 1.0f, -1.0f, 0.0f,	1.0f,  -1.0f, 0.0f,	1.0f, 0.0f,	//Нижний правый
-		-1.0f, -1.0f, 0.0f,	-1.0f, -1.0f, 0.0f,	0.0f, 0.0f,	//Нижний левый
-		-1.0f,  1.0f, 0.0f,	-1.0f,  1.0f, 0.0f,	0.0f, 1.0f 	//Верхний левый
-	};
-
-	const ushort indices[] =
-	{
-		2, 3, 0,
-		0, 1, 2,
-	};
-
-	static constexpr size_t vertices_size = sizeof(float) * 4 * 8;
-	static constexpr size_t indices_size = 6 * sizeof(uint);
-
-	namespace internal
-	{
-		void initTextureRenderer()
-		{
-			SREBO = glGenBuffer();
-			SRVBO = glGenBuffer();
-			SRVAO = glGenVertexArray();
-			glBindVertexArray(SRVAO);
-
-			glBindBuffer(GL_ARRAY_BUFFER, SRVBO);
-			glBufferData(GL_ARRAY_BUFFER, vertices_size, vertices, GL_STATIC_DRAW);
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, SREBO);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
-
-			setVertexAttributes();
-			glBindVertexArray(0);
-		}
-	}
-
-
 	using namespace internal;
 
 	size_t Texture::handle()
 	{
-		return container.texture_data.handle;
+		return container->texture_data.handle;
 	}
 
-    Texture::Texture(Texture& other)
-    : Asset(other.container){}
+    Texture::Texture(Texture& other) : Asset(other.container){}
 
-    Texture::Texture(Texture&& other)
-    : Asset(other.container){}
+    Texture::Texture(Texture&& other) : Asset(other.container){}
 
-    Texture::Texture(AssetContainer& container)
-    : Asset(container){}
+    Texture::Texture(AssetContainer* container) : Asset(container){}
 
-    void Texture::operator=(Texture&& other)
+    static inline uint generateErrorTexture()
     {
+    	uint texture_handle;
+
+    	static const char* data =
+			"\255\0\255\255"
+			"\255\255\255\255"
+			"\255\0\255\255"
+			"\255\255\255\255";
+
+    	glexec
+		(
+        	texture_handle = glGenTexture();
+    		glBindTexture(GL_TEXTURE_2D, texture_handle);
+    		setupDefaultTextureParameters();
+    		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, (const void*)data);
+		)
+		return texture_handle;
+    }
+
+    Texture::Texture(const String& name, int filter)
+    {
+    	AssetContainer** container_ptr = assets.get(name);
+    	AssetContainer* container;
+
+    	if(container_ptr == NULL)
+    	{
+            container = new (structalloc<AssetContainer>()) AssetContainer(asset_type::texture, name);
+            TextureData& texture_data = container->texture_data;
+
+            uint texture_handle;
+    		int width = 0;
+    		int height = 0;
+            int channels = 0;
+            int format = 0;
+
+            if(loadDataToBuffer("textures", name, "png"))
+            {
+                char* data = (char*)stb::load_from_memory((uint8*)asset_load_buffer.data(),
+                	asset_load_buffer.size(), &width, &height, &channels, 0);
+
+            	if(channels >= 3 && channels <= 4)
+				{
+                	if(channels == 3)
+                	{
+                		format = GL_RGB;
+                	}
+                	else if(channels == 4)
+                	{
+                		format = GL_RGBA;
+                	}
+
+                    glexec
+            		(
+            			texture_handle = glGenTexture();
+            			glBindTexture(GL_TEXTURE_2D, texture_handle);
+            			setupDefaultTextureParameters(filter);
+            			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            			glBindTexture(GL_TEXTURE_2D, 0);
+            		)
+				}
+            	else
+            	{
+            		texture_handle = generateErrorTexture();
+        	    	String error_buffer;
+        			appendMismatchError(error_buffer, "Texture::Texture/color_channels");
+        			appendOutputInfo(error_buffer, "texture_name", name);
+        			logWarning(error_buffer);
+            	}
+
+                free(data);
+            }
+            else
+			{
+                texture_handle = generateErrorTexture();
+    	    	String error_buffer;
+    			appendFailError(error_buffer, "Texture::Texture/load");
+    			appendOutputInfo(error_buffer, "texture_name", name);
+    			logWarning(error_buffer);
+			}
+            texture_data.handle = texture_handle;
+            texture_data.width = width;
+            texture_data.height = height;
+            assets.insert(name, container);
+    	}
+    	else
+    	{
+    		container = *container_ptr;
+    	}
+
+    	new (this) Asset(container);
+    }
+
+    void Texture::operator=(Texture& other)
+    {
+    	this->~Asset();
     	new (this) Texture(other);
     }
 
-    void Texture::bind()
+    void Texture::operator=(Texture&& other)
     {
-    	glActiveTexture(GL_TEXTURE0);
-    	glBindTexture(GL_TEXTURE_2D, handle());
+    	this->~Asset();
+    	new (this) Texture(other);
     }
 
-    void Texture::draw(mat4 model, mat4 uv, float rotation)
+    void Texture::draw(const mat4& model, const mat4& uv, const vec4& color)
     {
-		glad_glUniformMatrix4fv(0, 1, &model);
-		glad_glUniformMatrix4fv(1, 1, &uv);
+    	draw_texture(container->texture_data.handle, model, uv, color);
+    }
+
+    Sprite Texture::createSprite(float x, float y, float width, float height)
+    {
+    	Sprite result;
+
+    	result.container = container;
+    	container->ref_count++;
+
+    	result.uv = create_uv_matrix(x, y, width, height);
+    	return result;
+    }
+
+    Sprite Texture::createSprite(uint x, uint y, uint width, uint height)
+    {
+    	Sprite result;
+
+    	result.container = container;
+    	container->ref_count++;
+
+    	uint texture_width = container->texture_data.width;
+    	uint texture_height = container->texture_data.height;
+
+    	result.uv = create_uv_matrix(x,y, width, height, texture_width, texture_height);
+    	return result;
+    }
+
+    Sprite Texture::createSprite()
+    {
+    	Sprite result;
+
+    	result.container = container;
+    	container->ref_count++;
+
+    	float uv_x_scale = 1;
+    	float uv_y_scale = 1;
+    	float uv_x_offset = 0;
+    	float uv_y_offset = 0;
+
+    	result.uv = create_uv_matrix(uv_x_offset, uv_y_offset, uv_x_scale, uv_y_scale);//uv будет во всю текстуру.
+
+    	return result;
     }
 }
