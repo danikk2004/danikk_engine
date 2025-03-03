@@ -1,5 +1,5 @@
 #include <danikk_engine/style.h>
-#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/texture_methods.h>
 #include <danikk_engine/matrix/pos.h>
 #include <danikk_engine/matrix/uv.h>
 
@@ -43,7 +43,11 @@ namespace danikk_engine
 		};
 		for(const mat4& pos : poses)
 		{
-			draw_texture(0, pos, fill_uv_matrix, color);
+			setWorldMatrix(pos);
+			setUVMatrix(fill_uv_matrix);
+			setDrawColor(color);
+			bindTexture(0, 0);
+			drawSpriteMesh();
 		}
 	}
 

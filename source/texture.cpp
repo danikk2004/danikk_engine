@@ -3,12 +3,12 @@
 
 #include <danikk_engine/sprite.h>
 #include <danikk_engine/texture.h>
+#include <danikk_engine/texture_methods.h>
 
 #include <danikk_engine/internal/stb.h>
 #include <danikk_engine/internal/data_manager.h>
 #include <danikk_engine/internal/gl_object_manager.h>
 #include <danikk_engine/internal/vertex_attrib.h>
-#include <danikk_engine/internal/texture_methods.h>
 #include <danikk_engine/internal/glexec.h>
 #include <danikk_engine/matrix/uv.h>
 
@@ -132,9 +132,17 @@ namespace danikk_engine
     	new (this) Texture(other);
     }
 
-    void Texture::draw(const mat4& model, const mat4& uv, const vec4& color)
+	void Texture::bind(uint32 index)
+	{
+		bindTexture(this->container->texture_data.handle, 0);
+	}
+
+    void Texture::draw(const mat4& world, const mat4& uv, const vec4& color)
     {
-    	draw_texture(container->texture_data.handle, model, uv, color);
+    	setWorldMatrix(world);
+    	setUVMatrix(uv);
+    	setDrawColor(color);
+    	drawSpriteMesh();
     }
 
     Sprite Texture::createSprite(float x, float y, float width, float height)

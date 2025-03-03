@@ -23,7 +23,7 @@
 #include <danikk_engine/internal/gl_object_manager.h>
 #include <danikk_engine/internal/asset.h>
 #include <danikk_engine/internal/font.h>
-#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/texture_methods.h>
 #include <danikk_engine/internal/glexec.h>
 #include <danikk_engine/internal/error.h>
 

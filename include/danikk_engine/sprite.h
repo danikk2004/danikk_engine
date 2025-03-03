@@ -26,6 +26,6 @@ namespace danikk_engine
 
 		void draw(vec2 position, vec2 size, float rotation, vec4 color);
 
-		void draw(mat4 world, vec4 color);
+		void draw(const mat4& world, vec4 color);
 	};
 }

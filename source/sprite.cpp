@@ -3,7 +3,7 @@
 
 #include <danikk_engine/sprite.h>
 #include <danikk_engine/texture.h>
-#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/texture_methods.h>
 #include <danikk_engine/matrix/uv.h>
 #include <danikk_engine/matrix/pos.h>
 
@@ -31,12 +31,20 @@ namespace danikk_engine
 	void Sprite::draw(vec2 position, vec2 size, float rotation, vec4 color)
 	{
 		uint texture_handle = container ? container->texture_data.handle : 0;
-		draw_texture(texture_handle , create_pos_matrix(position, size, rotation), uv, color);
+		bindTexture(texture_handle, 0);
+		setWorldMatrix(create_pos_matrix(position, size, rotation));
+		setUVMatrix(uv);
+		setDrawColor(color);
+		drawSpriteMesh();
 	}
 
-	void Sprite::draw(mat4 world, vec4 color)
+	void Sprite::draw(const mat4& world, vec4 color)
 	{
 		uint texture_handle = container ? container->texture_data.handle : 0;
-		draw_texture(texture_handle , world, uv, color);
+		bindTexture(texture_handle, 0);
+		setWorldMatrix(world);
+		setUVMatrix(uv);
+		setDrawColor(color);
+		drawSpriteMesh();
 	}
 }

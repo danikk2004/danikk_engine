@@ -1,6 +1,6 @@
 #include <danikk_engine/gui.h>
 #include <danikk_engine/input.h>
-#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/texture_methods.h>
 #include <danikk_engine/matrix/uv.h>
 #include <danikk_engine/matrix/pos.h>
 #include <danikk_framework/assert.h>

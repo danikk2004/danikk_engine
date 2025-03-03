@@ -1,6 +1,6 @@
 #pragma once
 #include <danikk_engine/danikk_engine.h>
-#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/texture_methods.h>
 
 namespace danikk_engine
 {

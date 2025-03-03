@@ -8,7 +8,7 @@
 #include <danikk_engine/internal/data_manager.h>
 #include <danikk_engine/internal/font.h>
 #include <danikk_engine/internal/stb.h>
-#include <danikk_engine/internal/texture_methods.h>
+#include <danikk_engine/texture_methods.h>
 #include <danikk_engine/internal/gl_object_manager.h>
 #include <danikk_engine/matrix/pos.h>
 #include <danikk_engine/matrix/uv.h>
@@ -421,11 +421,17 @@ namespace danikk_engine
 				{
 					pos_matrix = create_pos_matrix(vec2(0,0), vec2(1,1), 0);
 					uv_matrix = create_uv_matrix(0, 0, 1);
-					draw_texture(char_atlas->gl_handle, pos_matrix, uv_matrix, style.color);
 				}
-				pos_matrix = create_pos_matrix(char_pos, char_size, 0);
-				uv_matrix = create_uv_matrix(char_atlas_pos.x, char_atlas_pos.y, FontData::char_uv_scale * 1.0f);
-				draw_texture(char_atlas->gl_handle, pos_matrix, uv_matrix, style.color);
+				else
+				{
+					pos_matrix = create_pos_matrix(char_pos, char_size, 0);
+					uv_matrix = create_uv_matrix(char_atlas_pos.x, char_atlas_pos.y, FontData::char_uv_scale * 1.0f);
+				}
+				setWorldMatrix(pos_matrix);
+				setUVMatrix(uv_matrix);
+				setDrawColor(style.color);
+				bindTexture(char_atlas->gl_handle, 0);
+				drawSpriteMesh();
 			}
 
 			char_counter++;
