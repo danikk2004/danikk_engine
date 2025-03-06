@@ -72,6 +72,16 @@ namespace danikk_engine
 		glUniformMatrix2fv(shader_layout_locations::uv, 1, 0, (float*)&uv);
     }
 
+    void setProjectionMatrix(const mat4& projection)
+    {
+		glUniformMatrix4fv(shader_layout_locations::projection, 1, 0, (float*)&projection);
+    }
+
+    void setViewMatrix(const mat4& view)
+    {
+		glUniformMatrix4fv(shader_layout_locations::view, 1, 0, (float*)&view);
+    }
+
     void setDrawColor(const vec4& color)
     {
 		glUniform4fv(shader_layout_locations::color, 1, (float*)&color);

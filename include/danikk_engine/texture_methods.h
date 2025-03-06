@@ -24,6 +24,10 @@ namespace danikk_engine
 
     void setUVMatrix(const uv_matrix& uv);
 
+    void setProjectionMatrix(const mat4& projection);
+
+    void setViewMatrix(const mat4& view);
+
     void setDrawColor(const vec4& color);
 
     void bindTexture(uint handle, uint index);
