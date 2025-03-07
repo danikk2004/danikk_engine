@@ -39,7 +39,7 @@ namespace danikk_engine
 					0, 1, 2,
 				}
 			);
-			sprite_mesh = dynamic_sprite_mesh();
+			sprite_mesh = move(dynamic_sprite_mesh.toMesh());
 		}
 	}
 

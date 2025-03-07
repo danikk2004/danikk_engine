@@ -31,6 +31,7 @@
 #include <danikk_engine/font.h>
 #include <danikk_engine/sprite.h>
 #include <danikk_engine/gui.h>
+#include <danikk_engine/dynamic_mesh.h>
 
 #include <GL/gl.h>
 
@@ -258,6 +259,7 @@ namespace danikk_engine
 
 		initGlObjectManager();
 		initTextureRenderer();
+		initBuiltInMeshes();
 
 		gui_root.absolute_size = vec2(1.0f);
     }

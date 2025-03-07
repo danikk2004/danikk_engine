@@ -16,25 +16,30 @@ namespace danikk_engine
 		indexes_count = 0;
 	}
 
+	void Mesh::gl_init(const float* vertexes, size_t vertexes_count, const gl_point_index_t* indexes,  size_t indexes_count)
+	{
+
+    	vertex_buffer_object = glGenBuffer();
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
+		glBufferData(GL_ARRAY_BUFFER, vertexes_count * sizeof(float), vertexes, GL_STATIC_DRAW);
+
+    	vertex_array_object = glGenVertexArray();
+		glBindVertexArray(vertex_array_object);
+
+		element_buffer_object = glGenBuffer();
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexes_count * sizeof(uint), indexes, GL_STATIC_DRAW);
+
+		setVertexAttributes();
+	}
+
 	Mesh::Mesh(const float* vertexes, size_t vertexes_count, const gl_point_index_t* indexes,  size_t indexes_count)
 	{
 		this->indexes_count = indexes_count;
 
         glexec
 		(
-			element_buffer_object = glGenBuffer();
-        	vertex_buffer_object = glGenBuffer();
-        	vertex_array_object = glGenVertexArray();
-			glBindVertexArray(vertex_array_object);
-
-			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
-			glBufferData(GL_ARRAY_BUFFER, vertexes_count * sizeof(float), vertexes, GL_STATIC_DRAW);
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexes_count * sizeof(uint), indexes, GL_STATIC_DRAW);
-
-			setVertexAttributes();
-			glBindVertexArray(0);
+			gl_init(vertexes, vertexes_count, indexes, indexes_count);
         )
 	}
 
@@ -48,14 +53,15 @@ namespace danikk_engine
 
 	Mesh::~Mesh()
 	{
-		if(element_buffer_object != 0)
+		//TODO:БЫЛ КОНФЛИФТ МЕШЕЙ, ПРИ КОТОРОМ ОДИН УДАЛЯЕТСЯ ПРИ СОЗДАНИИ ДРУГОГО, СДЕЛАТЬ ДРУГОЙ МЕХАНИЗМ ЧИСТКИ МЕШЕЙ
+		/*if(element_buffer_object != 0)
 		{
 			glDeleteBuffer(element_buffer_object);
 		}
 		if(vertex_buffer_object != 0)
 		{
 			glDeleteBuffer(vertex_buffer_object);
-		}
+		}*/
 	}
 
 	/*void Mesh::bind()
@@ -70,7 +76,9 @@ namespace danikk_engine
 
 	void Mesh::draw()
 	{
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object);
 		glBindVertexArray(vertex_array_object);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer_object);
 		glDrawElements(GL_TRIANGLES, indexes_count, GL_UNSIGNED_SHORT, (void*)(0));
 	}
 }

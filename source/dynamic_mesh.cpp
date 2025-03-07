@@ -4,28 +4,26 @@
 
 namespace danikk_engine
 {
-	/*void DynamicMesh::addTriangle(cref<MeshTriangle> triangle)
+	Mesh cube_mesh;
+
+	uvec2 square_tex_coords[4]
 	{
-		uint32 point_indexes_at_array[3 + 1];//последний элемент - текущий индекс в массиве индексов
-		#define current_arr_index point_indexes_at_array[3]
-		for(MeshVertex vertex : triangle.vertexes)
-		{
-			int64 index = vertexes.indexOf(vertex);
-			if(index == -1)
-			{
-				vertexes.push(vertex);
-				point_indexes_at_array[current_arr_index] = vertexes.size() - 1;
-			}
-			else
-			{
-				point_indexes_at_array[current_arr_index] = index;
-				current_arr_index++;
-			}
-		}
-		indexes.push(point_indexes_at_array[0]);
-		indexes.push(point_indexes_at_array[1]);
-		indexes.push(point_indexes_at_array[2]);
-	}*/
+		uvec2(1, 0),
+		uvec2(1, 1),
+		uvec2(0, 1),
+		uvec2(0, 0),
+	};
+
+	//в массиве из 4 элементов должны быть следующие индексы:
+	//2, 3, 0
+	//0, 1, 2
+	gl_point_index_t square_end_indices[6]
+	{
+		2, 3, 0,
+		0, 1, 2
+	};
+
+
 
 	DynamicMesh::DynamicMesh(const InitList<Vertex>& vertexes, const InitList<gl_point_index_t>& indexes)
 	{
@@ -33,7 +31,7 @@ namespace danikk_engine
 		new (&this->indexes) DynamicArray<gl_point_index_t>(indexes);
 	}
 
-	Mesh DynamicMesh::operator()()
+	Mesh DynamicMesh::toMesh()
 	{
 		return Mesh(vertexes, indexes);
 	}
@@ -45,35 +43,61 @@ namespace danikk_engine
 		return *this;
 	}
 
-	void initDynamicMeshes()
+	void DynamicMesh::addSquare(vec3* poses, vec3 normal)
 	{
-		InitList<Vertex> vertexes
+		gl_point_index_t first_index = vertexes.size();
+		for(index_t i = 0; i < 4; i++)
 		{
-					   //Позиции     		//Нормаль			//Текстурные координаты
-			Vertex(1.0f, 0.0f, 1.0f,	0.0f,  0.0f, 1.0f,	1.0f, 0.0f),	//Верхний правый
-			Vertex(1.0f, 0.0f, -1.0f,	0.0f,  0.0f, 1.0f,	1.0f, 1.0f),	//Нижний правый
-			Vertex(-1.0f, 0.0f, -1.0f,	0.0f,  0.0f, 1.0f,	0.0f, 1.0f),	//Нижний левый
-			Vertex(-1.0f, 0.0f, 1.0f,	0.0f,  0.0f, 1.0f,	0.0f, 0.0f) 	//Верхний левый
-		};
-		InitList<gl_point_index_t> indexes
+			Vertex vertex;
+			vertex.pos = poses[i];
+			vertex.normal = normal;
+			vertex.uv = square_tex_coords[i];
+			vertexes.push(vertex);
+		}
+
+		for(gl_point_index_t i : square_end_indices)
 		{
-			2, 3, 0,
-			0, 1, 2,
-		};
-		dynamic_square = DynamicMesh(vertexes, indexes);
-
-		mat4 trans(1.0f);
-		//trans = rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-		//trans = scale(trans, glm::vec3(0.5, 0.5, 0.5));
-
-		square = dynamic_square();
-		cube = dynamic_cube();
+			indexes.push(first_index + i);
+		}
 	}
 
-	DynamicMesh dynamic_square;
-	DynamicMesh dynamic_cube;
+	void initBuiltInMeshes()
+	{
+		DynamicMesh dynamic_cube = DynamicMesh();
+		vec3 cube_yp[4]
+		{
+			vec3(0, 1, 0),
+			vec3(1, 1, 0),
+			vec3(1, 1, 1),
+			vec3(0, 1, 1),
+		};
+		vec3 cube_ym[4]
+		{
+			vec3(0, 0, 0),
+			vec3(1, 0, 0),
+			vec3(1, 0, 1),
+			vec3(0, 0, 1),
+		};
+		vec3 cube_zm[4]
+		{
+			vec3(0, 0, 0),
+			vec3(1, 0, 0),
+			vec3(1, 1, 0),
+			vec3(0, 1, 0),
+		};
+		vec3 cube_zp[4]
+		{
+			vec3(0, 0, 1),
+			vec3(1, 0, 1),
+			vec3(1, 1, 1),
+			vec3(0, 1, 1),
+		};
+		dynamic_cube.addSquare(cube_yp, vec3(0, 1, 0));
+		dynamic_cube.addSquare(cube_ym, vec3(0, -1, 0));
+		dynamic_cube.addSquare(cube_zm, vec3(0, 0, 1));
+		dynamic_cube.addSquare(cube_zp, vec3(0, 0, -1));
 
-	Mesh square;
-	Mesh cube;
 
+		cube_mesh = dynamic_cube.toMesh();
+	}
 }

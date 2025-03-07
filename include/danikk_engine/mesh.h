@@ -45,7 +45,17 @@ namespace danikk_engine
 
 		Mesh();
 
+		Mesh(Mesh&) = delete;
+
+		Mesh(Mesh&&) = delete;
+
 		~Mesh();
+
+		Mesh& operator=(Mesh&) = delete;
+
+		Mesh& operator=(Mesh&&) = default;
+
+		void gl_init(const float* vertexes, size_t vertexes_count, const gl_point_index_t* indexes,  size_t indexes_count);
 
 		Mesh(const float* vertexes, size_t vertexes_count, const gl_point_index_t* indexes,  size_t indexes_count);
 

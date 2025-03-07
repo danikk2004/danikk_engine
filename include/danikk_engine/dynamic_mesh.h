@@ -35,18 +35,12 @@ namespace danikk_engine
 
 		DynamicMesh(const InitList<Vertex>& vertexes, const InitList<gl_point_index_t>& indexes);
 
-		void addSquare(vec3 pos, vec3 rotation);
+		void addSquare(vec3* poses, vec3 normal);
 
 		void clear();
 
-		Mesh operator()();
+		Mesh toMesh();
 	};
 
-	void initDynamicMeshes();
-
-	extern DynamicMesh dynamic_square;
-	extern DynamicMesh dynamic_cube;
-
-	extern Mesh square;
-	extern Mesh cube;
+	void initBuiltInMeshes();
 }
