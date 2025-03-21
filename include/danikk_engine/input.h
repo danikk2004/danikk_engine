@@ -1,5 +1,6 @@
 #pragma once
 #include <GLFW/glfw3.h>
+#include <danikk_framework/glm.h>
 
 namespace danikk_engine
 {
@@ -147,5 +148,9 @@ namespace danikk_engine
 
 	int getMouseState(int button);
 
-	vec2 getCursorPos();
+	float getMouseSensivity();
+
+	glm::vec2 getCursorPos();
+
+	glm::vec2 getCursorDelta();
 }

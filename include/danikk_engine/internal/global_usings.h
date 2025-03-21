@@ -47,6 +47,5 @@ namespace danikk_engine
 	#undef GLOBAL_DF_USE
 
 	using namespace glm;
-	using std::numbers::pi;
 	using std::move;
 }

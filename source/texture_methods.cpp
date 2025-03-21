@@ -13,35 +13,8 @@ namespace danikk_engine
 {
 	Texture white_texture;
 
-	namespace internal
-	{
-		static constexpr uint vertices_size = sizeof(float) * 4 * 8;
-		static constexpr uint indices_size = 6 * sizeof(gl_point_index_t);
-
-
-		void initTextureRenderer()
-		{
-			DynamicMesh dynamic_sprite_mesh = DynamicMesh
-			(
-				{
-					//Vertex(1.0f,  1.0f, 0.0f,	0.0f,  0.0f, 1.0f,	1.0f, 0.0f),	//Верхний правый
-					//Vertex(1.0f, -1.0f, 0.0f,	0.0f,  0.0f, 1.0f,	1.0f, 1.0f),	//Нижний правый
-					//Vertex(-1.0f, -1.0f, 0.0f,	0.0f,  0.0f, 1.0f,	0.0f, 1.0f),	//Нижний левый
-					//Vertex(-1.0f,  1.0f, 0.0f,	0.0f,  0.0f, 1.0f,	0.0f, 0.0f) 	//Верхний левый
-						   //Позиции     		//Нормаль			//Текстурные координаты
-					Vertex(0.5f,  0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	1.0f, 0.0f),	//Верхний правый
-					Vertex(0.5f, -0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	1.0f, 1.0f),	//Нижний правый
-					Vertex(-0.5f, -0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	0.0f, 1.0f),	//Нижний левый
-					Vertex(-0.5f,  0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	0.0f, 0.0f) 	//Верхний левый
-				},
-				{
-					2, 3, 0,
-					0, 1, 2,
-				}
-			);
-			sprite_mesh = move(dynamic_sprite_mesh.toMesh());
-		}
-	}
+	static constexpr uint vertices_size = sizeof(float) * 4 * 8;
+	static constexpr uint indices_size = 6 * sizeof(gl_point_index_t);
 
 	Mesh sprite_mesh;
 

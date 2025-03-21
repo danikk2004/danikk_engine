@@ -1,6 +1,8 @@
 #include <danikk_engine/dynamic_mesh.h>
+#include <danikk_engine/built_in_meshes.h>
+#include <danikk_engine/danikk_engine.h>
 #include <danikk_framework/assert.h>
-#include <glm/glm.hpp>
+#include <danikk_framework/glm.h>
 
 namespace danikk_engine
 {
@@ -43,7 +45,55 @@ namespace danikk_engine
 		return *this;
 	}
 
-	void DynamicMesh::addSquare(vec3* poses, vec3 normal)
+	void DynamicMesh::addSquare(const vec3& pos, const vec3& normal)
+	{
+		vec3 poses[4]
+		{
+			vec3(0.5f, 	0.0f, 0.5f),
+			vec3(-0.5f, 0.0f, 0.5f),
+			vec3(-0.5f, 0.0f, -0.5f),
+			vec3(0.5f, 	0.0f, -0.5f),
+		};
+		for(vec3& square_pos : poses)
+		{
+			if(normal.y == 1)
+			{
+				square_pos = glm::rotateX(square_pos, (float)pi * 0.5f);
+			}
+			if(normal.y == -1)
+			{
+
+			}
+			else
+			{
+				square_pos = glm::rotateX(square_pos, 0.5f * pi);
+				float rotation = 0;
+				if(normal.x == -1)
+				{
+					rotation = 0;
+				}
+				else if(normal.z == 1)
+				{
+					rotation = 0.5f;
+				}
+				else if(normal.x == 1)
+				{
+					rotation = 1.0f;
+				}
+				else if(normal.z == -1)
+				{
+					rotation = 1.5f;
+				}
+				rotation += 0.5f;
+				rotation = rotation * pi;
+				square_pos = glm::rotateY(square_pos, rotation);
+			}
+			square_pos += pos;
+		}
+		addSquare(poses, normal);
+	}
+
+	void DynamicMesh::addSquare(vec3* poses, const vec3& normal)
 	{
 		gl_point_index_t first_index = vertexes.size();
 		for(index_t i = 0; i < 4; i++)
@@ -63,41 +113,63 @@ namespace danikk_engine
 
 	void initBuiltInMeshes()
 	{
-		DynamicMesh dynamic_cube = DynamicMesh();
-		vec3 cube_yp[4]
-		{
-			vec3(0, 1, 0),
-			vec3(1, 1, 0),
-			vec3(1, 1, 1),
-			vec3(0, 1, 1),
-		};
-		vec3 cube_ym[4]
-		{
-			vec3(0, 0, 0),
-			vec3(1, 0, 0),
-			vec3(1, 0, 1),
-			vec3(0, 0, 1),
-		};
-		vec3 cube_zm[4]
-		{
-			vec3(0, 0, 0),
-			vec3(1, 0, 0),
-			vec3(1, 1, 0),
-			vec3(0, 1, 0),
-		};
-		vec3 cube_zp[4]
-		{
-			vec3(0, 0, 1),
-			vec3(1, 0, 1),
-			vec3(1, 1, 1),
-			vec3(0, 1, 1),
-		};
-		dynamic_cube.addSquare(cube_yp, vec3(0, 1, 0));
-		dynamic_cube.addSquare(cube_ym, vec3(0, -1, 0));
-		dynamic_cube.addSquare(cube_zm, vec3(0, 0, 1));
-		dynamic_cube.addSquare(cube_zp, vec3(0, 0, -1));
+		DynamicMesh dynamic_sprite_mesh = DynamicMesh
+		(
+			{
+				Vertex(0.5f,  0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	1.0f, 0.0f),
+				Vertex(0.5f, -0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	1.0f, 1.0f),
+				Vertex(-0.5f, -0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	0.0f, 1.0f),
+				Vertex(-0.5f,  0.5f, 0.0f,	0.0f,  0.0f, 1.0f,	0.0f, 0.0f),
+			},
+			{
+				2, 3, 0,
+				0, 1, 2,
+			}
+		);
 
+		/*DynamicMesh dynamic_cube = DynamicMesh
+		(
+			{
+				Vertex(1.0f, 1.0f, 1.0f,	0.0f, 0.0f, 0.0f, 	1.0f, 1.0f),
+				Vertex(-1.0f, 1.0f, 1.0f, 	0.0f, 0.0f, 0.0f, 	0.0f, 1.0f),
+				Vertex(-1.0f, 1.0f, -1.0f, 	0.0f, 0.0f, 0.0f, 	0.0f, 0.0f),
+				Vertex(1.0f, 1.0f, -1.0f, 	0.0f, 0.0f, 0.0f, 	1.0f, 0.0f),
+
+				Vertex(1.0f, -1.0f, 1.0f, 	0.0f, 0.0f, 0.0f, 	0.0f, 0.0f),
+				Vertex(-1.0f, -1.0f, 1.0f, 	0.0f, 0.0f, 0.0f, 	0.0f, 0.0f),
+				Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 	0.0f, 0.0f),
+				Vertex(1.0f, -1.0f, -1.0f, 	0.0f, 0.0f, 0.0f, 	0.0f, 0.0f),
+			},
+			{
+				0, 1, 3, //верх 1
+				3, 1, 2, //верх 2
+				2, 6, 7, //перед 1
+				7, 3, 2, //перед 2
+				7, 6, 5, //низ 1
+				5, 4, 7, //низ 2
+				5, 1, 4, //зад 1
+				4, 1, 0, //зад 2
+				4, 3, 7, //право 1
+				3, 4, 0, //право 2
+				5, 6, 2, //лево 1
+				5, 1, 2  //лево 2
+			}
+		);*/
+		DynamicMesh dynamic_cube;
+		for(float x = -0.5f; x < 1.0f; x += 1.0f)
+		{
+			dynamic_cube.addSquare(vec3(x, 0, 0), vec3(x * 2, 0, 0));
+		}
+		for(float y = -0.5f; y < 1.0f; y += 1.0f)
+		{
+			dynamic_cube.addSquare(vec3(0, y, 0), vec3(0, y * 2, 0));
+		}
+		for(float z = -0.5f; z < 1.0f; z += 1.0f)
+		{
+			dynamic_cube.addSquare(vec3(0, 0, z), vec3(0, 0, z * 2));
+		}
 
 		cube_mesh = dynamic_cube.toMesh();
+		sprite_mesh = dynamic_sprite_mesh.toMesh();
 	}
 }

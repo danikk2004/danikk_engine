@@ -35,7 +35,9 @@ namespace danikk_engine
 
 		DynamicMesh(const InitList<Vertex>& vertexes, const InitList<gl_point_index_t>& indexes);
 
-		void addSquare(vec3* poses, vec3 normal);
+		void addSquare(const vec3& pos, const vec3& normal);
+
+		void addSquare(vec3* poses, const vec3& normal);
 
 		void clear();
 

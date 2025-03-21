@@ -6,4 +6,5 @@
 namespace danikk_engine
 {
 	extern Mesh cube_mesh;
+	extern Mesh sprite_mesh;
 }

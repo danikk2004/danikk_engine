@@ -8,9 +8,6 @@ namespace danikk_engine
 	extern float screen_ratio_gz;
 	extern float screen_ratio_lz;
 
-	static constexpr float target_fps = 60.0f;
-	static constexpr float target_fd = 1.0f / target_fps;
-
 	static constexpr size_t gl_version_major = 4;
 	static constexpr size_t gl_version_minor = 3;
 
@@ -20,7 +17,11 @@ namespace danikk_engine
 
     float gameTime();
 
-    float timeFactor();
+    float getTimeFactor();
+
+    float getTargetFPS();
+
+    float getTargetFrameDelay();
 
     uint64 frameCount();
 

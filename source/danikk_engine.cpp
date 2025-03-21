@@ -18,6 +18,7 @@
 #include <danikk_framework/array.h>
 #include <danikk_framework/thread.h>
 #include <danikk_framework/memory.h>
+#include <danikk_framework/glm.h>
 
 #include <danikk_framework/misc/time_counter.h>
 #include <danikk_framework/misc/main.h>
@@ -55,12 +56,17 @@ namespace danikk_engine
 	GLFWwindow* window;
 
 	vec2 cursor_pos;
+	vec2 last_cursor_pos;
 	vec2 cursor_delta;
+	float mouse_sensivity = 10.0f;
+
+	float target_fps = 60.0f;
+	float target_fd = 1.0f / target_fps;
 
     TimeCounter fps_counter;
     static float game_time = 0;
-
     static uint32 frame_count = 0;
+    static bool off_cursor = false;
 
     thread_local bool is_main_thread = false;
     bool gl_thing_execute_requied = false;
@@ -107,6 +113,11 @@ namespace danikk_engine
 	button_state mouse_button_states[8]{ button_states::free };
 	button_state keyboard_button_states[400]{ button_states::free };
 
+	float getMouseSensivity()
+	{
+		return mouse_sensivity;
+	}
+
 	int getKeyboardState(int button)
 	{
         return keyboard_button_states[button].getState();
@@ -122,7 +133,6 @@ namespace danikk_engine
     	vec2 new_cursor_pos = vec2(
 			cursor_pos.x = x / window_size.x,
 			cursor_pos.y = 1 - y / window_size.y);//преобразование из системы координат ввода в систему координат OpenGL
-    	cursor_delta = new_cursor_pos - cursor_pos;
     	cursor_pos = new_cursor_pos;
     }
 
@@ -235,6 +245,10 @@ namespace danikk_engine
         glfwSetCharCallback(window, charCallback);
         glfwSetCursorPosCallback(window, cursorPositionCallback);
         glfwSetMouseButtonCallback(window, mouseButtonCallback);
+        if(off_cursor)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
@@ -252,13 +266,13 @@ namespace danikk_engine
 		//glEnable(GL_TEXTURE_2D);
 		//glEnable(GL_TEXTURE0);
 		glEnable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
 		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glfwSwapBuffers(window);
 
 		initGlObjectManager();
-		initTextureRenderer();
 		initBuiltInMeshes();
 
 		gui_root.absolute_size = vec2(1.0f);
@@ -279,9 +293,19 @@ namespace danikk_engine
     	return game_time;
     }
 
-    float timeFactor()
+    float getTimeFactor()
     {
-    	return game_time - (float)(int)(game_time);
+    	return glm::cos(game_time * 2.0f * pi);
+    }
+
+    float getTargetFPS()
+    {
+    	return target_fps;
+    }
+
+    float getTargetFrameDelay()
+    {
+    	return target_fd;
     }
 
     uint64 frameCount()
@@ -297,6 +321,11 @@ namespace danikk_engine
     vec2 getCursorPos()
     {
     	return cursor_pos;
+    }
+
+    vec2 getCursorDelta()
+    {
+    	return cursor_delta;
     }
 
     namespace internal
@@ -347,6 +376,9 @@ namespace danikk_engine
         	glUniform1f(shader_layout_locations::time_factor, game_time);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             danikk_engine_game::frame();
+
+            cursor_delta = cursor_pos - last_cursor_pos;
+            last_cursor_pos = cursor_pos;
 
     		for(GUIElement* ch : gui_root.childs)
     		{

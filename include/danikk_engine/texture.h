@@ -7,11 +7,6 @@
 
 namespace danikk_engine
 {
-	namespace internal
-	{
-		void initTextureRenderer();
-	}
-
 	class Texture : public internal::Asset
 	{
 	private:
@@ -19,7 +14,6 @@ namespace danikk_engine
 
 		size_t handle();
 	public:
-
 		Texture() = default;
 
 		Texture(Texture& other);

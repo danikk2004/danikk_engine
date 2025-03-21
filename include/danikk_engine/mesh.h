@@ -69,6 +69,4 @@ namespace danikk_engine
 
 		void draw();
 	};
-
-	extern Mesh sprite_mesh;
 }
