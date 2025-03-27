@@ -28,4 +28,6 @@ namespace danikk_engine
 
 		void draw(const mat4& world, vec4 color);
 	};
+
+	extern Sprite white_sprite;
 }

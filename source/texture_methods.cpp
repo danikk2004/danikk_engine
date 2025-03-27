@@ -12,6 +12,7 @@
 namespace danikk_engine
 {
 	Texture white_texture;
+	Sprite white_sprite;
 
 	static constexpr uint vertices_size = sizeof(float) * 4 * 8;
 	static constexpr uint indices_size = 6 * sizeof(gl_point_index_t);

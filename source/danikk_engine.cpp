@@ -24,6 +24,7 @@
 #include <danikk_framework/misc/main.h>
 
 #include <danikk_engine/danikk_engine.h>
+#include <danikk_engine/texture.h>
 #include <danikk_engine/input.h>
 #include <danikk_engine/localization.h>
 #include <danikk_engine/internal/data_manager.h>
@@ -33,6 +34,7 @@
 #include <danikk_engine/sprite.h>
 #include <danikk_engine/gui.h>
 #include <danikk_engine/dynamic_mesh.h>
+#include <danikk_engine/internal/asset.h>
 
 #include <GL/gl.h>
 
@@ -77,6 +79,8 @@ namespace danikk_engine
 
 	float screen_ratio_gz;
 	float screen_ratio_lz;
+
+	AssetContainer white_texture_container(asset_type::texture, "white_texture");
 
 	struct button_state
 	{
@@ -274,6 +278,11 @@ namespace danikk_engine
 
 		initGlObjectManager();
 		initBuiltInMeshes();
+
+		white_texture = Texture(&white_texture_container);
+		white_texture.handle() = 0;
+		white_sprite = white_texture.createSprite();
+		//white_sprite = danikk_engine::white_texture.createSprite();
 
 		gui_root.absolute_size = vec2(1.0f);
     }

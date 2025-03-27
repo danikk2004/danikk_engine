@@ -11,9 +11,9 @@ namespace danikk_engine
 	{
 	private:
 		friend class Sprite;
-
-		size_t handle();
 	public:
+		uint& handle();
+
 		Texture() = default;
 
 		Texture(Texture& other);

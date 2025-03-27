@@ -16,7 +16,7 @@ namespace danikk_engine
 {
 	using namespace internal;
 
-	size_t Texture::handle()
+	uint& Texture::handle()
 	{
 		return container->texture_data.handle;
 	}
