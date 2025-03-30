@@ -365,8 +365,6 @@ namespace danikk_engine
         configureLog();
         argv::log();
         formatLogInfo("BIT : %", sizeof(size_t) * 8);
-        enableAllocatorLog();
-        //formatLogMemory(" Array::summary memory size:%", Array::__getSummaryMemorySize());
 
     	danikk_framework::setLocale("ru_RU");
 	    danikk_framework::initLocalization();

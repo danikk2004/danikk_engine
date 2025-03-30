@@ -24,6 +24,8 @@ namespace danikk_engine
 
 		~Sprite() = default;
 
+		void bind();
+
 		void draw(vec2 position, vec2 size, float rotation, vec4 color);
 
 		void draw(const mat4& world, vec4 color);

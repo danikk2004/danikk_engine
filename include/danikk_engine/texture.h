@@ -24,15 +24,17 @@ namespace danikk_engine
 
 		Texture(const String& name, int filter = texture_filters::nearest);
 
-		void operator=(Texture& other);
+		Texture& operator=(Texture& other);
 
-		void operator=(Texture&& other);
+		Texture& operator=(Texture&& other);
 
 		Sprite createSprite();
 
 		Sprite createSprite(float x, float y, float width, float height);
 
 		Sprite createSprite(uint x, uint y, uint width, uint height);
+
+		Sprite createSpriteByIndex(uint32 index, uint32 sprite_size, uint32 sprite_count_at_row);
 
 		void bind(uint32 index = 0);
 

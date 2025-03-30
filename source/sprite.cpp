@@ -28,6 +28,13 @@ namespace danikk_engine
 		new (this) Sprite(other);
 	}
 
+	void Sprite::bind()
+	{
+		uint texture_handle = container ? container->texture_data.handle : 0;
+		bindTexture(texture_handle, 0);
+		setUVMatrix(uv);
+	}
+
 	void Sprite::draw(vec2 position, vec2 size, float rotation, vec4 color)
 	{
 		uint texture_handle = container ? container->texture_data.handle : 0;

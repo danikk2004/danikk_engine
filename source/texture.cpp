@@ -120,16 +120,18 @@ namespace danikk_engine
     	new (this) Asset(container);
     }
 
-    void Texture::operator=(Texture& other)
+    Texture& Texture::operator=(Texture& other)
     {
     	this->~Asset();
     	new (this) Texture(other);
+    	return *this;
     }
 
-    void Texture::operator=(Texture&& other)
+    Texture& Texture::operator=(Texture&& other)
     {
     	this->~Asset();
     	new (this) Texture(other);
+    	return *this;
     }
 
 	void Texture::bind(uint32 index)
@@ -169,6 +171,11 @@ namespace danikk_engine
     	result.uv = create_uv_matrix(x,y, width, height, texture_width, texture_height);
     	return result;
     }
+
+	Sprite Texture::createSpriteByIndex(uint32 index, uint32 sprite_size, uint32 sprite_count_at_row)
+	{
+		return createSprite(index % sprite_count_at_row, index / sprite_count_at_row, sprite_size, sprite_size);
+	}
 
     Sprite Texture::createSprite()
     {

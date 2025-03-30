@@ -156,15 +156,18 @@ namespace danikk_engine
 			}
 		);*/
 		DynamicMesh dynamic_cube;
-		for(float x = -0.5f; x < 1.0f; x += 1.0f)
+		float start = -0.50f;
+		float end = 1.0f;
+		float step = 1.0f;
+		for(float x = start; x <end; x += step)
 		{
 			dynamic_cube.addSquare(vec3(x, 0, 0), vec3(x * 2, 0, 0));
 		}
-		for(float y = -0.5f; y < 1.0f; y += 1.0f)
+		for(float y = start; y < end; y += step)
 		{
 			dynamic_cube.addSquare(vec3(0, y, 0), vec3(0, y * 2, 0));
 		}
-		for(float z = -0.5f; z < 1.0f; z += 1.0f)
+		for(float z = start; z < end; z += step)
 		{
 			dynamic_cube.addSquare(vec3(0, 0, z), vec3(0, 0, z * 2));
 		}
