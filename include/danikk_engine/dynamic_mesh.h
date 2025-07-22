@@ -37,6 +37,8 @@ namespace danikk_engine
 
 		void addSquare(const vec3& pos, const vec3& normal);
 
+		void addSquare(Vertex* vertexes);
+
 		void addSquare(vec3* poses, const vec3& normal);
 
 		void clear();

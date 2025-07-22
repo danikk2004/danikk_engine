@@ -45,20 +45,20 @@ namespace danikk_engine
 		return *this;
 	}
 
-	void DynamicMesh::addSquare(const vec3& pos, const vec3& normal)
+	void DynamicMesh::addSquare(const vec3& pos, const vec3& normal, const vec2& uv_offset, const vec2 uv_size)
 	{
-		vec3 poses[4]
+		Vertex poses[4]
 		{
-			vec3(0.5f, 	0.0f, 0.5f),
-			vec3(-0.5f, 0.0f, 0.5f),
-			vec3(-0.5f, 0.0f, -0.5f),
-			vec3(0.5f, 	0.0f, -0.5f),
+			Vertex(vec3(0.5f, 	0.0f, 0.5f), 	normal, 	uv_offset),
+			Vertex(vec3(-0.5f, 0.0f, 0.5f), 	normal,		vec2(uv_offset.x + uv_size.x, uv_offset.y)),
+			Vertex(vec3(-0.5f, 0.0f, -0.5f), 	normal,		uv_offset + uv_size),
+			Vertex(vec3(0.5f, 	0.0f, -0.5f), 	normal,		vec2(uv_offset.x, uv_offset.y + uv_size.y)),
 		};
-		for(vec3& square_pos : poses)
+		for(Vertex& square_pos : poses)
 		{
 			if(normal.y == 1)
 			{
-				square_pos = glm::rotateX(square_pos, (float)pi * 0.5f);
+				square_pos.pos = glm::rotateX(square_pos.pos, (float)pi * 0.5f);
 			}
 			if(normal.y == -1)
 			{
@@ -66,7 +66,7 @@ namespace danikk_engine
 			}
 			else
 			{
-				square_pos = glm::rotateX(square_pos, 0.5f * pi);
+				square_pos.pos = glm::rotateX(square_pos.pos, 0.5f * pi);
 				float rotation = 0;
 				if(normal.x == -1)
 				{
@@ -86,9 +86,9 @@ namespace danikk_engine
 				}
 				rotation += 0.5f;
 				rotation = rotation * pi;
-				square_pos = glm::rotateY(square_pos, rotation);
+				square_pos.pos = glm::rotateY(square_pos.pos, rotation);
 			}
-			square_pos += pos;
+			square_pos.pos += pos;
 		}
 		addSquare(poses, normal);
 	}
@@ -103,6 +103,20 @@ namespace danikk_engine
 			vertex.normal = normal;
 			vertex.uv = square_tex_coords[i];
 			vertexes.push(vertex);
+		}
+
+		for(gl_point_index_t i : square_end_indices)
+		{
+			indexes.push(first_index + i);
+		}
+	}
+
+	void DynamicMesh::addSquare(Vertex* vertexes)
+	{
+		gl_point_index_t first_index = this->vertexes.size();
+		for(index_t i = 0; i < 4; i++)
+		{
+			this->vertexes.push(vertexes[i]);
 		}
 
 		for(gl_point_index_t i : square_end_indices)

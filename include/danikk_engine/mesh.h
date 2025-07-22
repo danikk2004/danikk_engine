@@ -33,6 +33,13 @@ namespace danikk_engine
 			uv = vec2(uvx, uvz);
 		}
 
+		Vertex(vec3 pos, vec3 normal, vec2 uv)
+		{
+			this->pos = pos;
+			this->normal = normal;
+			this->uv = uv;
+		}
+
 		Vertex(const Vertex& other) = default;
 	};
 
