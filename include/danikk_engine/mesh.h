@@ -56,6 +56,8 @@ namespace danikk_engine
 
 		Mesh(Mesh&&) = delete;
 
+		Mesh(const char* model_name, const char* name);//загрузка из obj файла
+
 		void clear();
 
 		bool isNull();

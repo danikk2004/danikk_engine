@@ -80,14 +80,25 @@ namespace danikk_engine
 				current_path_buffer.popDirectory();
 				current_path_buffer.popDirectory();
 			}
-			fatalFail("initDataManager::init_data_manager");
+			fatalError("Cant find data");
 		}
 
-	    bool loadDataToBuffer(const String& asset_type, const String& name, const String& extension)
+	    bool loadDataToBuffer(const char* asset_type, const char* subdir, const char* name, const char* extension, bool is_fatal)
 	    {
 	    	localpath_buffer.clear();
-	        localpath_buffer << asset_type << pathSlash << name << '.' << extension;
+	        localpath_buffer << data_directory << asset_type << pathSlash << subdir << pathSlash << name << '.' << extension;
+	        return loadDataToBuffer(localpath_buffer.c_string(), is_fatal);
+	    }
 
+	    bool loadDataToBuffer(const char* asset_type, const char* name, const char* extension, bool is_fatal)
+	    {
+	    	localpath_buffer.clear();
+	        localpath_buffer << data_directory << asset_type << pathSlash << name << '.' << extension;
+	        return loadDataToBuffer(localpath_buffer.c_string(), is_fatal);
+	    }
+
+	    bool loadDataToBuffer(const char* path, bool is_fatal)
+	    {
 	        if(zip_is_exits)
 	        {
 	            const char* zip_path = localpath_buffer.c_string();
@@ -99,11 +110,6 @@ namespace danikk_engine
 
 	            if(error)
 	            {
-	        		formatFatalError("% %. % : %.",
-	        				localization("cant_load"),
-	    					localpath_buffer,
-	    					localization("error/code"),
-	    					error);
 	                return false;
 	            }
 
@@ -117,11 +123,6 @@ namespace danikk_engine
 
 	            if(error)
 	            {
-	            	formatFatalError("% %. % : %.",
-	        				localization("cant_load"),
-	    					localpath_buffer,
-	    					localization("error/code"),
-	    					error);
 	                return false;
 	            }
 
@@ -129,14 +130,19 @@ namespace danikk_engine
 	        }
 	        else
 	        {
-	        	PathBuffer data_path;
-	        	data_path.pushDirectory(data_directory);
-	        	data_path.setFileName(localpath_buffer);
 
 	        	FileReader reader;
-	        	reader.open(data_path);
+	        	reader.open(path);
 	        	if(!reader.isOpen())
 	        	{
+	            	if(is_fatal)
+	            	{
+		            	formatFatalError("Cant load file %", path);
+	            	}
+	            	else
+	            	{
+		            	formatLogWarning("Cant load file %", path);
+	            	}
 	                return false;
 	        	}
 	        	asset_load_buffer.resize(reader.size());

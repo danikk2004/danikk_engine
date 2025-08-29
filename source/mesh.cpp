@@ -1,12 +1,18 @@
 #include <danikk_engine/danikk_engine.h>
 #include <danikk_engine/mesh.h>
+#include <danikk_engine/internal/data_manager.h>
 #include <danikk_engine/internal/vertex_attrib.h>
 #include <danikk_engine/internal/glexec.h>
 #include <danikk_engine/internal/gl_object_manager.h>
 
+#include <danikk_framework/misc/line_getter.h>
+#include <danikk_framework/cstring_functions.h>
+#include <danikk_framework/glm.h>
+
 namespace danikk_engine
 {
 	using namespace internal;
+	using namespace danikk_framework;
 
 	Mesh::Mesh()
 	{
@@ -14,6 +20,80 @@ namespace danikk_engine
 		vertex_buffer_object =
 		vertex_array_object =
 		indexes_count = 0;
+	}
+
+	Mesh::Mesh(const char* model_name, const char* name)
+	{
+		bool can_load;
+		if(model_name == NULL)
+		{
+			can_load = loadDataToBuffer("meshes", name, "obj", true);
+		}
+		else
+		{
+			can_load = loadDataToBuffer("models", model_name, name, "obj", true);
+		}
+
+		DynamicArray<vec3> vertex_pos;
+		DynamicArray<vec2> vertex_uv;
+		DynamicArray<vec3> vertex_normal;
+		DynamicArray<Vertex> vertexes;
+		DynamicArray<gl_point_index_t> indexes;
+
+		uint32 index_counter = 0;
+
+		if(can_load)
+		{
+			char* current_obj_ptr = asset_load_buffer.c_string();
+			Array<char*, 16> splitted;
+			Array<char, 8> splitters
+			{
+				' ',
+				'/'
+			};
+			while (*current_obj_ptr != '\0')
+			{
+				char* line = getLine(current_obj_ptr);
+				splitted.clear();
+				strsplit(line, splitted, splitters);
+				//SplitToFirstSelectedChar(OBJReader.ReadLine(), ' ', out string DataType, out string Value);
+				char* obj_key = splitted[0];
+				if(strequal(obj_key, "v"))
+				{
+					vertex_pos.push(parseVec3(splitted.data() + 1));
+
+				}
+				else if(strequal(obj_key, "vt"))
+				{
+					vertex_uv.push(parseVec2(splitted.data() + 1));
+
+				}
+				else if(strequal(obj_key, "vn"))
+				{
+					vertex_normal.push(parseVec3(splitted.data() + 1));
+
+				}
+				else if(strequal(obj_key, "vf"))
+				{
+					char** current_data = splitted.data() + 1;
+					for(index_t i = 0; i < 3; i++)
+					{
+						uvec3 index_vec = parseUvec3(current_data + i * 3);
+						vertexes.pushCtor(
+								vertex_pos[index_vec[0]],
+								vertex_normal[index_vec[1]],
+								vertex_normal[index_vec[2]]);
+						indexes.push(index_counter++);
+
+					}
+				}
+			}
+			glexec
+			(
+				generateBuffers();
+				setData((float*)vertexes.data(),  vertexes.size() * 8, indexes.data(), indexes.size());
+			);
+		}
 	}
 
 	void Mesh::generateBuffers()

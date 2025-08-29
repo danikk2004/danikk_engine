@@ -30,6 +30,7 @@ namespace danikk_engine
 	class Texture;
 	class Sprite;
 	class TextStyle;
+	class Model;
 
 	struct vertex
 	{

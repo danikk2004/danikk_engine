@@ -14,7 +14,11 @@ namespace danikk_engine
 	{
 		void initDataManager();
 
-		bool loadDataToBuffer(const String& asset_type, const String& name, const String& extension);
+		bool loadDataToBuffer(const char* asset_type, const char* subdir, const char* name, const char* extension, bool is_fatal);
+
+		bool loadDataToBuffer(const char* asset_type, const char* name, const char* extension, bool is_fatal);
+
+		bool loadDataToBuffer(const char* path, bool is_fatal);
 
 	    extern MemoryBuffer asset_load_buffer;
 	    extern String localpath_buffer;

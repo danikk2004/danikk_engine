@@ -67,30 +67,12 @@ namespace danikk_engine
 			else
 			{
 				square_pos.pos = glm::rotateX(square_pos.pos, 0.5f * pi);
-				float rotation = 0;
-				if(normal.x == -1)
-				{
-					rotation = 0;
-				}
-				else if(normal.z == 1)
-				{
-					rotation = 0.5f;
-				}
-				else if(normal.x == 1)
-				{
-					rotation = 1.0f;
-				}
-				else if(normal.z == -1)
-				{
-					rotation = 1.5f;
-				}
-				rotation += 0.5f;
-				rotation = rotation * pi;
+				float rotation = atan2(normal.x, normal.z);
 				square_pos.pos = glm::rotateY(square_pos.pos, rotation);
 			}
 			square_pos.pos += pos;
 		}
-		addSquare(poses, normal);
+		addSquare((Vertex*)poses);
 	}
 
 	void DynamicMesh::addSquare(vec3* poses, const vec3& normal)

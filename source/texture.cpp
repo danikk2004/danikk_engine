@@ -2,6 +2,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <danikk_engine/sprite.h>
+
+#include <danikk_engine/danikk_engine.h>
 #include <danikk_engine/texture.h>
 #include <danikk_engine/texture_methods.h>
 
@@ -47,7 +49,7 @@ namespace danikk_engine
 		return texture_handle;
     }
 
-    Texture::Texture(const String& name, int filter)
+    Texture::Texture(const char* name, int filter)
     {
     	AssetContainer** container_ptr = assets.get(name);
     	AssetContainer* container;
@@ -63,7 +65,7 @@ namespace danikk_engine
             int channels = 0;
             int format = 0;
 
-            if(loadDataToBuffer("textures", name, "png"))
+            if(loadDataToBuffer("textures", name, "png", false))
             {
                 char* data = (char*)stb::load_from_memory((uint8*)asset_load_buffer.data(),
                 	asset_load_buffer.size(), &width, &height, &channels, 0);
@@ -91,10 +93,7 @@ namespace danikk_engine
             	else
             	{
             		texture_handle = generateErrorTexture();
-        	    	String error_buffer;
-        			appendMismatchError(error_buffer, "Texture::Texture/color_channels");
-        			appendOutputInfo(error_buffer, "texture_name", name);
-        			logWarning(error_buffer);
+            		danikk_framework::formatLogWarning("Mismatch color channels for texture \"%\"", name);
             	}
 
                 free(data);
@@ -102,10 +101,7 @@ namespace danikk_engine
             else
 			{
                 texture_handle = generateErrorTexture();
-    	    	String error_buffer;
-    			appendFailError(error_buffer, "Texture::Texture/load");
-    			appendOutputInfo(error_buffer, "texture_name", name);
-    			logWarning(error_buffer);
+                danikk_framework::formatLogWarning("Failed to load texture %", name);
 			}
             texture_data.handle = texture_handle;
             texture_data.width = width;

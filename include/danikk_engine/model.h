@@ -9,11 +9,10 @@ namespace danikk_engine
 	class Model : internal::Asset
 	{
 		DynamicArray<Mesh> meshes;
-		DynamicArray<Material> materials;
 	public:
 		Model();
 
-		Model(const char* name);
+		Model(const char* name, bool is_sinle_meshed_obj = false);
 
 		~Model();
 

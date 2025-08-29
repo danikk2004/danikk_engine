@@ -40,10 +40,7 @@ namespace danikk_engine
 
 			if (error)
 			{
-				String error_buffer;
-				appendFailError(error_buffer, "initFontRenderer/init_freetype2");
-				appendOutputInfo(error_buffer, "error_code", error);
-				logFatal(error_buffer);
+				formatLogFatal("Failde to init freetype2 error code:%", error);
 				fatalError();
 			}
 		}
@@ -64,63 +61,34 @@ namespace danikk_engine
                 internal::FontData& font = *container->font_ptr;
                 FT_Face& face = font.true_type_data.face;
 
-        		if(!loadDataToBuffer("fonts", name, "ttf"))
-        		{
-        	    	String error_buffer;
-        			appendFailError(error_buffer, "Font::Font/load");
-        			appendOutputInfo(error_buffer, "font_name", name);
-    				logFatal(error_buffer);
-    				fatalError();
-        		}
+        		loadDataToBuffer("fonts", name, "ttf", true);
 
         		size_t error = FT_New_Memory_Face(ftlib, (uint8*)asset_load_buffer.data(), asset_load_buffer.size(), 0, &face);
 
         		if(error)
         		{
-        	    	String error_buffer;
-        			appendFailError(error_buffer, "Font::Font/init_face");
-        			appendOutputInfo(error_buffer, "font_name", name);
-        			appendOutputInfo(error_buffer, "error_code", error);
-    				logFatal(error_buffer);
-    				fatalError();
+        			formatFatalError("Failded to init face font name:% error code:%", name, error);
         		}
 
         		error = FT_Set_Pixel_Sizes(face, FontData::char_axis_size, FontData::char_axis_size);
 
     			if (error)
     			{
-        	    	String error_buffer;
-        			appendFailError(error_buffer, "Font::Font/set_size");
-        			appendOutputInfo(error_buffer, "font_name", name);
-        			appendOutputInfo(error_buffer, "error_code", error);
-    				logFatal(error_buffer);
-    				fatalError();
+    				formatFatalError("Failded to set size font name:% error code:%", name, error);
     			}
 
     			error = FT_Select_Charmap(face , FT_ENCODING_UNICODE);
 
     			if (error)
     			{
-        	    	String error_buffer;
-        			appendFailError(error_buffer, "Font::Font/select_charmap");
-        			appendOutputInfo(error_buffer, "font_name", name);
-        			appendOutputInfo(error_buffer, "error_code", error);
-    				logFatal(error_buffer);
-    				fatalError();
+    				formatFatalError("Failded to select charmap font name:% error code:%", name, error);
     			}
             }
             else if(font_type == FontTypes::rasterized)
             {
             	FontData::rasterized_data_t& data = container->font_ptr->rasterized_data;
                 DynamicArray<FontData::rasterized_page>& pages = data.pages;
-                if(!loadDataToBuffer("fonts", name, "rfmd"))//rfmd - rasterized font meta data
-        		{
-        			String error_buffer;
-					appendFailError(error_buffer, "Font::Font/load");
-					appendOutputInfo(error_buffer, "font_name", name);
-    				logFatal(error_buffer);
-    				fatalError();
-        		}
+                loadDataToBuffer("fonts", name, "rfmd", true);//rfmd - rasterized font meta data
     			Config font_settings;
     			font_settings.openData(asset_load_buffer.data(), asset_load_buffer.size());
 
@@ -128,16 +96,7 @@ namespace danikk_engine
     			DynamicArray<String> page_names = splitStringToArray(pages_str, ';');
     			for(const String& page_name : page_names)
     			{
-        			String directory_name = formatCreate("fonts%%", pathSlash, name);
-        			if(!loadDataToBuffer(directory_name, page_name, "png"))
-        			{
-            			String error_buffer;
-    					appendFailError(error_buffer, "Font::Font/load");
-    					appendOutputInfo(error_buffer, "font_name", name);
-    					appendOutputInfo(error_buffer, "path", formatCreate("%%%.%", directory_name, pathSlash, page_name, "png"));
-        				logFatal(error_buffer);
-        				fatalError();
-        			}
+        			loadDataToBuffer("fonts", name, page_name.c_string(), "png", true);
     				FontData::rasterized_page& page = pages.pushCtor();
 
     				String page_kv;
@@ -342,12 +301,7 @@ namespace danikk_engine
 						uint32 error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
 						if (error)
 						{
-							appendFailError(error_buffer, "Font::draw/load_glyph");
-							appendOutputInfo(error_buffer, "font_name", container->name);
-							appendOutputInfo(error_buffer, "char_code", current_char);
-							appendOutputInfo(error_buffer, "error_code", error);
-							logWarning(error_buffer);
-							error_buffer.clear();
+	                    	formatLogWarning("Failded to  load font % glyph for char % with error %", container->name, current_char, error);
 							current_char++;
 							continue;
 						}
@@ -356,12 +310,7 @@ namespace danikk_engine
 
 						if (error)
 						{
-							appendFailError(error_buffer, "Font::draw/render_glyph");
-							appendOutputInfo(error_buffer, "font_name", container->name);
-							appendOutputInfo(error_buffer, "char_code", current_char);
-							appendOutputInfo(error_buffer, "error_code", error);
-							logWarning(error_buffer);
-							error_buffer.clear();
+	                    	formatLogWarning("Failded to render glyph of font % for char % with error %", container->name, current_char, error);
 							current_char++;
 							continue;
 						}
@@ -384,12 +333,7 @@ namespace danikk_engine
 
 						if(bitmap.width == 0 || bitmap.rows == 0)
 						{
-							appendMismatchError(error_buffer, "Font::draw/glyph_size");
-							appendOutputInfo(error_buffer, "font_name", container->name);
-							appendOutputInfo(error_buffer, "char_code", current_char);
-							logWarning(error_buffer);
-							error_buffer.clear();
-							current_char++;
+	                    	formatLogWarning("Mismatch glyph size of font % for char %", container->name, current_char);
 							continue;
 						}
 

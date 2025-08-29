@@ -22,7 +22,7 @@ namespace danikk_engine
 
 		Texture(internal::AssetContainer* container);
 
-		Texture(const String& name, int filter = texture_filters::nearest);
+		Texture(const char* name, int filter = texture_filters::nearest);
 
 		Texture& operator=(Texture& other);
 

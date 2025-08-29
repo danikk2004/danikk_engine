@@ -163,24 +163,15 @@ namespace danikk_engine
     				if(!find_flag)
     				{
     					String error_buffer;
-    					appendFailError(error_buffer, "compileShader::preproc");
-    					appendOutputInfo(error_buffer, "shader_name", shader_name);
-    					appendOutputInfo(error_buffer, "shader_file", formatCreate("%.%", shader_name, glShaderTypeToFileExt(type)));
-    					appendOutputInfo(error_buffer, "reason",
-    						formatCreate("% % % shader_process_buffer:%.", localization("compileShader::include_file"), double_quotes(include_file_buffer), localization("compileShader::not_exits"), shader_process_buffer));
+
+    					formatFatalError("Cant find file for shader % with file %", shader_name, glShaderTypeToFileExt(type));
         				logFatal(error_buffer);
         				fatalError();
     				}
     			}
     			else
     			{
-					String error_buffer;
-					appendFailError(error_buffer, "compileShader::preproc");
-					appendOutputInfo(error_buffer, "shader_name", shader_name);
-					appendOutputInfo(error_buffer, "shader_file", formatCreate("%.%", shader_name, glShaderTypeToFileExt(type)));
-					appendOutputInfo(error_buffer, "reason", localization("compileShader::wrong_directive"));
-    				logFatal(error_buffer);
-    				fatalError();
+					formatFatalError("Wrong directive for shader % with file %", shader_name, glShaderTypeToFileExt(type));
     			}
     		}
     		else if(strstartswith(raw_code, "void main()"))
@@ -215,16 +206,9 @@ namespace danikk_engine
                 glGetShaderInfoLog(shader, GL_LOG_SIZE, NULL, infoLog);
             )
 
-			String error_buffer;
-			String shader_file;
-			format(shader_file, "%.%", shader_name, glShaderTypeToFileExt(type));
-			appendFailError(error_buffer, "compileShader::compile");
-			appendOutputInfo(error_buffer, "shader_name", shader_name);
-			appendOutputInfo(error_buffer, "shader_file", shader_file);
-			appendOutputInfo(error_buffer, "log", infoLog);
-			appendOutputInfo(error_buffer, "code", code);
-			logFatal(error_buffer);
-			fatalError();
+			formatLogFatal("log:%", infoLog);
+			formatLogFatal("code:%", code);
+			formatFatalError("Cant compile shader  %.%\n", shader_name, glShaderTypeToFileExt(type));
         }
 
     	return shader;
@@ -241,28 +225,16 @@ namespace danikk_engine
         	int fragmentShader;
         	int program;
 
-			if(!loadDataToBuffer("shaders", name, "vert"))
+			if(!loadDataToBuffer("shaders", name, "vert", true))
 			{
-				String error_buffer;
-				String shader_file;
-				format(shader_file, "%.%", name, "vert");
-				appendFailError(error_buffer, "Shader::Shader::load_shader");
-				appendOutputInfo(error_buffer, "shader_file", shader_file);
-				logFatal(error_buffer);
-				fatalError();
+				formatFatalError("Cant load shader file  %.%\n", name, "vert");
 			}
 
             vertexShader = compileShader(name, GL_VERTEX_SHADER);
 
-			if(!loadDataToBuffer("shaders", name, "frag"))
+			if(!loadDataToBuffer("shaders", name, "frag", true))
 			{
-				String error_buffer;
-				String shader_file;
-				format(shader_file, "%.%", name, "frag");
-				appendFailError(error_buffer, "Shader::Shader::load_shader");
-				appendOutputInfo(error_buffer, "shader_file", shader_file);
-				logFatal(error_buffer);
-				fatalError();
+				formatFatalError("Cant load shader file  %.%\n", name, "frag");
 			}
 
             fragmentShader = compileShader(name, GL_FRAGMENT_SHADER);
@@ -289,12 +261,8 @@ namespace danikk_engine
             	(
             		glGetProgramInfoLog(program, GL_LOG_SIZE, NULL, infoLog);
                 )
-                String error_buffer;
-				appendFailError(error_buffer, "compileShader::link");
-				appendOutputInfo(error_buffer, "shader_name", name);
-				appendOutputInfo(error_buffer, "log", infoLog);
-				logFatal(error_buffer);
-				fatalError();
+                formatLogFatal("log:%", infoLog);
+				formatFatalError("Cant link shader  %\n", name);
             }
 
     		container = new (structalloc<AssetContainer>()) AssetContainer(asset_type::texture, name);

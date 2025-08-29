@@ -20,8 +20,6 @@ namespace danikk_engine
 
 		struct FontData;//Имплементация в <internal/font.h>
 
-		struct ModelData;//Имплементация в <internal/model.h>
-
 		struct AssetContainer;
 
 		typedef void (*asset_free_func_t)(AssetContainer&);
@@ -55,7 +53,7 @@ namespace danikk_engine
 				TextureData texture_data;
 				ShaderData shader_data;
 				FontData* font_ptr;
-				ModelData* model_ptr;
+				Model* model_ptr;
 			};
 
 			AssetContainer(size_t type, const String& name);

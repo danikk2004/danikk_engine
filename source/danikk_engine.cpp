@@ -230,7 +230,7 @@ namespace danikk_engine
 
         if (!window)
         {
-        	fatalFail("initGraphics::create_window");
+        	fatalError("Cant create window");
         }
 
         //const GLFWvidmode* mode;
@@ -256,7 +256,7 @@ namespace danikk_engine
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-        	fatalFail("initGraphics::init_glad");
+        	fatalError("Cant inir glad");
         }
 
 		#define display_gl_thing(name) formatLogInfo("% : %", #name , (char*)glGetString(name));
